@@ -11,18 +11,22 @@ sensor:
     port: '/dev/ttyACM0'
 ```
 
-##Configuraion
-port:
-  description: The comm port where the meter is connected to.
-  required: true
-  type: string
-name:
-  description: The name to use when displaying this sensor.
-  required: false
-  type: string
+## Configuraion
 
-### Reference Material
-https://github.com/smakonin/RAEdataset/blob/master/EMU2_reader.py
-https://github.com/home-assistant/home-assistant/blob/master/homeassistant/components/sensor/serial.py
-https://home-assistant.io/components/sensor.date_countdown/
-https://github.com/rainforestautomation/Emu-Serial-API
+
+### port:
+  * description: The comm port which the meter is connected to.
+  * required: true
+  * type: string
+
+
+### name:
+  * description: The name to use when displaying this sensor.
+  * required: false
+  * type: string
+
+## Reference Material
+ * https://github.com/smakonin/RAEdataset/blob/master/EMU2_reader.py
+ * https://github.com/home-assistant/home-assistant/blob/master/homeassistant/components/sensor/serial.py
+ * https://home-assistant.io/components/sensor.date_countdown/
+ * https://github.com/rainforestautomation/Emu-Serial-API
