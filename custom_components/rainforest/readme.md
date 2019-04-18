@@ -1,5 +1,5 @@
-# EMU2 Meter Component
-Place `sensor.py` in `config\custom_components\rainforest_emu2\`
+# Install the Rainforest Component
+Place `__init__.py` and `sensor.py` in `config\custom_components\rainforest\`
 
 ## Overview
 To use your Rainforest Automation EMU-2™ Energy Monitoring Unit in your installation, add the following to your `configuration.yaml` file:
@@ -7,7 +7,7 @@ To use your Rainforest Automation EMU-2™ Energy Monitoring Unit in your instal
 ```yaml
 # Example configuration.yaml entry
 sensor:
-  - platform: emu2
+  - platform: rainforest
     port: '/dev/ttyACM0'
 ```
 

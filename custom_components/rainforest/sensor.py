@@ -17,9 +17,9 @@ from threading import Thread
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "emu2"
+DOMAIN = "rainforest"
 
-DEFAULT_NAME = "EMU2 Instantaneous Power"
+DEFAULT_NAME = "Rainforest Energy Monitoring Unit"
 CONF_PORT = 'port'
 
 ATTR_DEVICE_MAC_ID = "Device MAC ID"
