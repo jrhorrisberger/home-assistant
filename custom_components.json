@@ -1,0 +1,13 @@
+{
+    "rainforest_emu2": {
+        "version": "0.2.0",
+        "local_location": "/custom_components/rainforest_emu2/__init__.py",
+        "remote_location": "https://raw.githubusercontent.com/jrhorrisberger/home-assistant/master/custom_components/rainforest_emu2/__init__.py",
+        "visit_repo": "https://github.com/jrhorrisberger/home-assistant",
+        "changelog": "https://github.com/jrhorrisberger/home-assistant/wiki/Changelog",
+        "resources": [
+            "https://raw.githubusercontent.com/jrhorrisberger/home-assistant/master/custom_components/rainforest_emu2/__init__.py",
+            "https://raw.githubusercontent.com/jrhorrisberger/home-assistant/master/custom_components/rainforest_emu2/sensor.py"
+        ]
+    }
+}

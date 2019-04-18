@@ -1,0 +1,8 @@
+{
+    "domain": "rainforest_emu2",
+    "name": "Rainforest EMU-2",
+    "documentation": "https://github.com/jrhorrisberger/home-assistant/custom_components/rainforest_emu2",
+    "dependencies": [],
+    "codeowners": ["@jrhorrisberger"],
+    "requirements": []
+  }
