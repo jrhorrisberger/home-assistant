@@ -4,11 +4,10 @@
 To use your Rainforest Automation EMU-2™ Energy Monitoring Unit in Home Assistant follow the `Installation` and `Configuration` instructions.
 
 ## Installation
+Place the following files in `config\custom_components\rainforest\`:
 * [__`rainforest/__init__.py`__](./__init__.py)
 * [__`rainforest/sensor.py`__](./sensor.py)
 * [__`rainforest/manifest.json`__](./manifest.json)
-
-Place these files in `config\custom_components\rainforest\`.
 
 ## Configuraion
 Add the following to your `configuration.yaml` file:
