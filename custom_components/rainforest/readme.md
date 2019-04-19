@@ -1,5 +1,5 @@
 # Install the Rainforest Component
-Place `__init__.py` and `sensor.py` in `config\custom_components\rainforest\`
+Place `__init__.py`, `manifest.json`, and `sensor.py` in `config\custom_components\rainforest\`
 
 ## Overview
 To use your Rainforest Automation EMU-2™ Energy Monitoring Unit in your installation, add the following to your `configuration.yaml` file:
