@@ -13,7 +13,7 @@ import logging
 import voluptuous as vol
 from threading import Thread
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 _LOGGER = logging.getLogger(__name__)
 
