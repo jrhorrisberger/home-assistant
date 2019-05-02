@@ -29,6 +29,10 @@ sensor:
   * required: false
   * type: string
 
+## Known Fixes
+  * If the emu2 fails to initialize serial (e.g. pi not recognizing it, try different USB cables)
+  * If not running HASSIO (e.g. Ubuntu), make sure to have pyserial (via pip3 install pyserial)
+
 ## Reference Material
  * https://github.com/smakonin/RAEdataset/blob/master/EMU2_reader.py
  * https://github.com/home-assistant/home-assistant/blob/master/homeassistant/components/sensor/serial.py
