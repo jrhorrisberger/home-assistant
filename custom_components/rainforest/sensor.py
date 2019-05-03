@@ -26,6 +26,7 @@ ATTR_DEVICE_MAC_ID = "Device MAC ID"
 ATTR_METER_MAC_ID = "Meter MAC ID"
 ATTR_TEIR = "Price Teir"
 ATTR_PRICE = "Price"
+ATTR_SUMMATION = "Cumulative kWh"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT): cv.string,
@@ -52,7 +53,7 @@ class EMU2Sensor(Entity):
         self._baudrate = 115200
         self._timeout = 1
         self._icon = 'mdi:flash'
-        self._unit_of_measurement = "kWh"
+        self._unit_of_measurement = "kW"
         
         self._serial_thread = None
         self._serial_thread_isEnabled = True
@@ -64,6 +65,7 @@ class EMU2Sensor(Entity):
         self._data[ATTR_METER_MAC_ID] = None
         self._data[ATTR_TEIR] = None
         self._data[ATTR_PRICE] = None
+        self._data[ATTR_SUMMATION] = None
 
     @property
     def name(self):
@@ -76,6 +78,7 @@ class EMU2Sensor(Entity):
             ATTR_METER_MAC_ID: self._data.get(ATTR_METER_MAC_ID),
             ATTR_TEIR: self._data.get(ATTR_TEIR),
             ATTR_PRICE: self._data.get(ATTR_PRICE),
+            ATTR_SUMMATION: self._data.get(ATTR_SUMMATION),
         }
         
     @property
@@ -150,6 +153,13 @@ class EMU2Sensor(Entity):
                         self._data[ATTR_TEIR] = int(xmlTree.find('Tier').text, 16)
                         
                         _LOGGER.debug("PriceCluster: %s", self._data[ATTR_PRICE])
+                    elif xmlTree.tag == 'CurrentSummationDelivered':
+                        energy = int(xmlTree.find('SummationDelivered').text, 16)
+                        energy -= int(xmlTree.find('SummationReceived').text, 16)
+                        energy *= int(xmlTree.find('Multiplier').text, 16)
+                        energy /= int(xmlTree.find('Divisor').text, 16)
+                        energy = round(energy, int(xmlTree.find('DigitsRight').text, 16))
+                        self._data[ATTR_SUMMATION] = energy
             else:
                 time.sleep(0.5)
 
