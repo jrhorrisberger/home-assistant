@@ -13,7 +13,7 @@ import logging
 import voluptuous as vol
 from threading import Thread
 
-__version__ = '0.2.1'
+__version__ = '0.2.3'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,12 @@ CONF_PORT = 'port'
 
 ATTR_DEVICE_MAC_ID = "Device MAC ID"
 ATTR_METER_MAC_ID = "Meter MAC ID"
-ATTR_TEIR = "Price Teir"
+ATTR_TIER = "Price Tier"
 ATTR_PRICE = "Price"
+ATTR_SUMMATION = "Net kWh"
+ATTR_DELIVERED = "Delivered kWh"
+ATTR_RECEIVED = "Received kWh"
+ATTR_CUSTOMPRICE = "Custom Price"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT): cv.string,
@@ -37,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     port = config.get(CONF_PORT)
     sensor_name = config.get(CONF_NAME)
 
-    sensor = EMU2Sensor(sensor_name, port)
+    sensor = EMU2Sensor(sensor_name, port, hass)
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
@@ -45,14 +49,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([sensor])
 
 class EMU2Sensor(Entity):
-    def __init__(self, sensor_name, port):
+    def __init__(self, sensor_name, port, hass):
         _LOGGER.debug("Init")
+        self._hass = hass
         self._port = port
         self._name = sensor_name
         self._baudrate = 115200
         self._timeout = 1
         self._icon = 'mdi:flash'
-        self._unit_of_measurement = "kWh"
+        self._unit_of_measurement = "kW"
         
         self._serial_thread = None
         self._serial_thread_isEnabled = True
@@ -62,8 +67,16 @@ class EMU2Sensor(Entity):
         self._data = {}                
         self._data[ATTR_DEVICE_MAC_ID] = None
         self._data[ATTR_METER_MAC_ID] = None
-        self._data[ATTR_TEIR] = None
+        self._data[ATTR_TIER] = None
         self._data[ATTR_PRICE] = None
+        self._data[ATTR_SUMMATION] = None
+        self._data[ATTR_DELIVERED] = None
+        self._data[ATTR_RECEIVED] = None
+        custom_price = self._hass.states.get('input_number.rainforest_tariff_custom_rate')
+        if custom_price is not None:
+            self._data[ATTR_CUSTOMPRICE] = custom_price.state
+        else:
+            self._data[ATTR_CUSTOMPRICE] = None
 
     @property
     def name(self):
@@ -74,8 +87,12 @@ class EMU2Sensor(Entity):
         return {
             ATTR_DEVICE_MAC_ID: self._data.get(ATTR_DEVICE_MAC_ID),
             ATTR_METER_MAC_ID: self._data.get(ATTR_METER_MAC_ID),
-            ATTR_TEIR: self._data.get(ATTR_TEIR),
+            ATTR_TIER: self._data.get(ATTR_TIER),
             ATTR_PRICE: self._data.get(ATTR_PRICE),
+            ATTR_SUMMATION: self._data.get(ATTR_SUMMATION),
+            ATTR_DELIVERED: self._data.get(ATTR_DELIVERED),
+            ATTR_RECEIVED: self._data.get(ATTR_RECEIVED),
+            ATTR_CUSTOMPRICE: self._data.get(ATTR_CUSTOMPRICE),
         }
         
     @property
@@ -128,6 +145,7 @@ class EMU2Sensor(Entity):
                                 
                     if xmlTree.tag == 'InstantaneousDemand':
                         demand = int(xmlTree.find('Demand').text, 16)
+                        demand = -(demand & 0x80000000) | (demand & 0x7fffffff)
                         multiplier = int(xmlTree.find('Multiplier').text, 16)
                         divisor = int(xmlTree.find('Divisor').text, 16)
                         digitsRight = int(xmlTree.find('DigitsRight').text, 16)
@@ -141,15 +159,48 @@ class EMU2Sensor(Entity):
                         self.async_schedule_update_ha_state()
                         
                         _LOGGER.debug("InstantaneousDemand: %s", self._state)
+                        
+                        custom_price = self._hass.states.get('input_number.rainforest_tariff_custom_rate')
+                        if custom_price is not None:
+                            self._data[ATTR_CUSTOMPRICE] = custom_price.state
+                        
+                        if self._data[ATTR_CUSTOMPRICE] is not None:
+                            self._data[ATTR_PRICE] = self._data[ATTR_CUSTOMPRICE]
+                            priceHex = hex(int(round(float(self._data[ATTR_CUSTOMPRICE]))))
+                            
+                            setPriceCommand='<Command><Name>set_current_price</Name><Price>'+priceHex+'</Price><TrailingDigits>0x05</TrailingDigits></Command>'
+                            _LOGGER.debug ('setPriceCommand: %s', setPriceCommand)
+                            commandResult = reader.write (str.encode(setPriceCommand))
+                            _LOGGER.debug ('commandResult: %s', commandResult)
 
                     elif xmlTree.tag == 'PriceCluster':
                         priceRaw = int(xmlTree.find('Price').text, 16)
                         trailingDigits = int(xmlTree.find('TrailingDigits').text, 16)
                         self._data[ATTR_PRICE] = priceRaw / pow(10, trailingDigits)
 
-                        self._data[ATTR_TEIR] = int(xmlTree.find('Tier').text, 16)
+                        self._data[ATTR_TIER] = int(xmlTree.find('Tier').text, 16)
                         
                         _LOGGER.debug("PriceCluster: %s", self._data[ATTR_PRICE])
+                    elif xmlTree.tag == 'CurrentSummationDelivered':
+                        
+                        delivered = int(xmlTree.find('SummationDelivered').text, 16)
+                        delivered *= int(xmlTree.find('Multiplier').text, 16)
+                        delivered /= int(xmlTree.find('Divisor').text, 16)
+                        self._data[ATTR_DELIVERED] = delivered
+                        
+                        received = int(xmlTree.find('SummationReceived').text, 16)
+                        received *= int(xmlTree.find('Multiplier').text, 16)
+                        received /= int(xmlTree.find('Divisor').text, 16)
+                        self._data[ATTR_RECEIVED] = received
+                        
+                        energy = int(xmlTree.find('SummationDelivered').text, 16)
+                        energy -= int(xmlTree.find('SummationReceived').text, 16)
+                        energy *= int(xmlTree.find('Multiplier').text, 16)
+                        energy /= int(xmlTree.find('Divisor').text, 16)
+                        energy = round(energy, int(xmlTree.find('DigitsRight').text, 16))
+                        self._data[ATTR_SUMMATION] = energy
+                             
+                        
             else:
                 time.sleep(0.5)
 
