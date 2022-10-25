@@ -83,7 +83,7 @@ class EMU2Sensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         return {
             ATTR_DEVICE_MAC_ID: self._data.get(ATTR_DEVICE_MAC_ID),
             ATTR_METER_MAC_ID: self._data.get(ATTR_METER_MAC_ID),
